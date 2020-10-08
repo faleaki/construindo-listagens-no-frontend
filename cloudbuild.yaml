@@ -1,0 +1,58 @@
+steps:
+
+  - id: "Gerando service-account-storage.json"
+    name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - kms
+      - decrypt
+      - --ciphertext-file=./storage/credentials/google/service-account-storage.json.enc
+      - --plaintext-file=./storage/credentials/google/service-account-storage.json
+      - --location=global
+      - --keyring=testing-lesson
+      - --key=service-account
+
+  - id: "Rodando docker-compose"
+    name: "gcr.io/$PROJECT_ID/docker-compose:1.25.5"
+    args: ["-f","./docker-compose.prod.yaml","up","-d"]
+    env:
+      - GOOGLE_CLOUD_PROJECT_ID=$PROJECT_ID
+      - GOOGLE_CLOUD_KEY_FILE=service-account-storage.json
+      - GOOGLE_CLOUD_STORAGE_BUCKET=code-micro-videos-ak
+      - GOOGLE_CLOUD_STORAGE_API_URL=https://storage.cloud.google.com/code-micro-videos-ak
+      - TESTING_PROD=true
+
+  - id: "ls www-data"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["exec", "-t", "app", "ls","-l"]
+
+  - id: "ls db"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["exec", "-t", "db", "ls","-l"]
+
+  - id: "Rodando docker ps"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["ps"]
+
+  - id: "Rodando composer"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["exec", "-t", "app", "composer", "install"]
+
+  - id: "Copiando .env"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["exec", "-t", "app", "cp", ".env.example", ".env"]
+
+  - id: "Copiando .env.testing"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["exec", "-t", "app", "cp", ".env.testing.example", ".env.testing"]
+
+  - id: "Rodando key Generate"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["exec", "-t", "app", "php", "/var/www/artisan", "key:generate"]
+
+  - id: "Rodando Migrations"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["exec", "-t", "app", "php", "/var/www/artisan", "migrate"]
+
+  - id: "Rodando Phpunit"
+    name: "gcr.io/cloud-builders/docker"
+    args: ["exec", "-t", "app", "php", "/var/www/vendor/bin/phpunit", "-c", "/var/www/phpunit.xml"]
