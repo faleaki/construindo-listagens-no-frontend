@@ -44,7 +44,7 @@ const Table = (props: Props) => {
         httpVideo.get('cast_members').then(
             response => setData(response.data.data)
         )
-    })
+    }, [])
     return (
         <MUIDataTable
             title="Listagem de Membros de elencos"

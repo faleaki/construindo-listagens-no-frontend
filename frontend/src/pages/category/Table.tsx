@@ -45,7 +45,7 @@ const Table = (props: Props) => {
         httpVideo.get('categories').then(
             response => setData(response.data.data)
         )
-    })
+    }, [])
     return (
         <MUIDataTable
             title="Listagem de categorias"

@@ -40,7 +40,7 @@ const Table = (props: Props) => {
         httpVideo.get('genres').then(
             response => setData(response.data.data)
         )
-    })
+    }, [])
     return (
         <MUIDataTable
             title="Listagem de gêneros"
