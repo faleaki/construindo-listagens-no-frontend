@@ -3,4 +3,3 @@
 .docker/dbdata
 .devcontainer/
 .npm-cache/
-.env
